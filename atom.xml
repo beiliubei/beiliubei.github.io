@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.iccapp.com/"/>
-  <updated>2016-09-01T01:58:52.000Z</updated>
+  <updated>2016-09-01T02:36:09.000Z</updated>
   <id>http://www.iccapp.com/</id>
   
   <author>
@@ -16,25 +16,65 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>android</title>
-    <link href="http://www.iccapp.com/2016/09/01/android/"/>
-    <id>http://www.iccapp.com/2016/09/01/android/</id>
-    <published>2016-09-01T01:58:52.000Z</published>
-    <updated>2016-09-01T01:58:52.000Z</updated>
+    <title>手动编译kxmovie需要的ffmpeg</title>
+    <link href="http://www.iccapp.com/2016/09/01/%E5%9C%A8kxmovie%E4%B8%AD%E9%9B%86%E6%88%90%E6%89%8B%E5%8A%A8%E7%BC%96%E8%AF%91%E7%9A%84deFFmpeg/"/>
+    <id>http://www.iccapp.com/2016/09/01/在kxmovie中集成手动编译的deFFmpeg/</id>
+    <published>2016-09-01T02:34:16.000Z</published>
+    <updated>2016-09-01T02:36:09.000Z</updated>
     
     <summary type="html">
     
     </summary>
     
     
+      <category term="ios kxmovie" scheme="http://www.iccapp.com/tags/ios-kxmovie/"/>
+    
   </entry>
   
   <entry>
-    <title>Hello World</title>
-    <link href="http://www.iccapp.com/2016/09/01/hello-world/"/>
-    <id>http://www.iccapp.com/2016/09/01/hello-world/</id>
+    <title>android内存泄漏笔记</title>
+    <link href="http://www.iccapp.com/2016/09/01/android%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%AC%94%E8%AE%B0/"/>
+    <id>http://www.iccapp.com/2016/09/01/android内存泄漏笔记/</id>
+    <published>2016-09-01T01:58:52.000Z</published>
+    <updated>2016-09-01T02:54:05.000Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="第三方库"><a href="#第三方库" class="headerlink" title="第三方库"></a>第三方库</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">https://github.com/square/leakcanary</div></pre></td></tr></table></figure>
+<h3 id="gradle-集成"><a href="#gradle-集成" class="headerlink" title="gradle 集成"></a>gradle 集成</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">dependencies &#123;</div><div class="line">  debugCompile <span class="string">'com.squareup.leakcanary:leakcanary-android:1.4-beta2'</span></div><div class="line">  releaseCompile <span class="string">'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta2'</span></div><div class="line">  <span class="built_in">test</span>Compile <span class="string">'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta2'</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="In-your-Application-class"><a href="#In-your-Application-class" class="headerlink" title="In your Application class:"></a>In your Application class:</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">public class ExampleApplication extends Application &#123;</div><div class="line"></div><div class="line">  @Override public void <span class="function"><span class="title">onCreate</span></span>() &#123;</div><div class="line">    super.onCreate();</div><div class="line">    LeakCanary.install(this);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h3><p>下次编译安装好了apk后，会多出一个leak的应用，且每有一个项目集成了该库，就会有一个一样的leak应用出现在launch中，打开可以看到项目中，泄漏的部分。</p>
+<h3 id="实战"><a href="#实战" class="headerlink" title="实战"></a>实战</h3><h4 id="Activity-finish后，但是对他的引用还未结束"><a href="#Activity-finish后，但是对他的引用还未结束" class="headerlink" title="Activity finish后，但是对他的引用还未结束"></a>Activity finish后，但是对他的引用还未结束</h4><p>最常见的是多线程的应用，简单来说，就是当在activity的生命周期内，发送了一个异步请求，当activity结束，该异步请求还未结束返回，但是对activity的context还是有引用，导致activity无法正常被回收。</p>
+<p>解决方法：一般如Handle采用弱引用，或者在activity的onStop中，结束异步请求。</p>
+<p>合理分配activity的context，即时释放对该context的引用。</p>
+<h4 id="Context-leak-in-android-net-ConnectivityManager"><a href="#Context-leak-in-android-net-ConnectivityManager" class="headerlink" title="Context leak in android.net.ConnectivityManager"></a>Context leak in android.net.ConnectivityManager</h4><p>解决方法：</p>
+<p>由</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);</div></pre></td></tr></table></figure>
+<p>改成</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ConnectivityManager cm = (ConnectivityManager)context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);</div></pre></td></tr></table></figure>
+<p>原因我猜测和上面的context的引用一样的情况。</p>
+<h4 id="Realm的不及时关闭"><a href="#Realm的不及时关闭" class="headerlink" title="Realm的不及时关闭"></a>Realm的不及时关闭</h4><p>解决方法：</p>
+<p>在BaseActivity中定义<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">private Realm realm;</div><div class="line"></div><div class="line">@Override</div><div class="line">protected void <span class="function"><span class="title">onDestroy</span></span>() &#123;</div><div class="line">    super.onDestroy();</div><div class="line">    <span class="keyword">if</span> (realm != null) &#123;</div><div class="line">        realm.close();</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">public Realm <span class="function"><span class="title">getRealm</span></span>() &#123;</div><div class="line">    <span class="keyword">if</span> (realm == null) &#123;</div><div class="line">        realm = Realm.getDefaultInstance();</div><div class="line">    &#125;</div><div class="line">    <span class="built_in">return</span> realm;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>在BaseFragment中定义</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line">private Realm realm;</div><div class="line">@Override</div><div class="line">public void <span class="function"><span class="title">onPause</span></span>() &#123;</div><div class="line">    super.onPause();</div><div class="line">    <span class="keyword">if</span> (realm != null)&#123;</div><div class="line">        realm.close();</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">@Override</div><div class="line">public void <span class="function"><span class="title">onResume</span></span>() &#123;</div><div class="line">    super.onResume();</div><div class="line">    <span class="keyword">if</span> (realm == null)&#123;</div><div class="line">        realm = Realm.getDefaultInstance();</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">public Realm <span class="function"><span class="title">getRealm</span></span>() &#123;</div><div class="line">    <span class="keyword">if</span> (realm == null)&#123;</div><div class="line">        realm = Realm.getDefaultInstance();</div><div class="line">    &#125;</div><div class="line">    <span class="built_in">return</span> realm;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>未完待续。。。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;第三方库&quot;&gt;&lt;a href=&quot;#第三方库&quot; class=&quot;headerlink&quot; title=&quot;第三方库&quot;&gt;&lt;/a&gt;第三方库&lt;/h3&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre
+    
+    </summary>
+    
+    
+      <category term="android 内存" scheme="http://www.iccapp.com/tags/android-%E5%86%85%E5%AD%98/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Hexo 安装</title>
+    <link href="http://www.iccapp.com/2016/09/01/hexo%E5%AE%89%E8%A3%85/"/>
+    <id>http://www.iccapp.com/2016/09/01/hexo安装/</id>
     <published>2016-09-01T00:58:39.000Z</published>
-    <updated>2016-09-01T00:58:39.000Z</updated>
+    <updated>2016-09-01T02:33:08.000Z</updated>
     
     <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
 <h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
